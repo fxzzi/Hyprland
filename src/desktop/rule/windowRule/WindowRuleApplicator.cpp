@@ -59,6 +59,7 @@ std::unordered_set<CWindowRuleEffectContainer::storageType> CWindowRuleApplicato
                    std::pair{std::ref(m_noFollowMouse), [this] { return noFollowMouseEffect(); }}, std::pair{std::ref(m_noScreenShare), [this] { return noScreenShareEffect(); }},
                    std::pair{std::ref(m_noVRR), [this] { return noVRREffect(); }}, std::pair{std::ref(m_persistentSize), [this] { return persistentSizeEffect(); }},
                    std::pair{std::ref(m_stayFocused), [this] { return stayFocusedEffect(); }}, std::pair{std::ref(m_idleInhibitMode), [this] { return idleInhibitModeEffect(); }},
+                   std::pair{std::ref(m_confinePointer), [this] { return confinePointerEffect(); }},
                    std::pair{std::ref(m_borderSize), [this] { return borderSizeEffect(); }}, std::pair{std::ref(m_rounding), [this] { return roundingEffect(); }},
                    std::pair{std::ref(m_roundingPower), [this] { return roundingPowerEffect(); }}, std::pair{std::ref(m_scrollMouse), [this] { return scrollMouseEffect(); }},
                    std::pair{std::ref(m_scrollTouchpad), [this] { return scrollTouchpadEffect(); }},
@@ -426,6 +427,11 @@ CWindowRuleApplicator::SRuleResult CWindowRuleApplicator::applyDynamicRule(const
             case WINDOW_RULE_EFFECT_STAY_FOCUSED: {
                 m_stayFocused.first.set(truthy(effect), Types::PRIORITY_WINDOW_RULE);
                 m_stayFocused.second |= rule->getPropertiesMask();
+                break;
+            }
+            case WINDOW_RULE_EFFECT_CONFINE_POINTER: {
+                m_confinePointer.first.set(truthy(effect), Types::PRIORITY_WINDOW_RULE);
+                m_confinePointer.second |= rule->getPropertiesMask();
                 break;
             }
             case WINDOW_RULE_EFFECT_SCROLL_MOUSE: {
