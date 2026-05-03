@@ -94,7 +94,13 @@ static bool tryMoveFocusToMonitor(PHLMONITOR monitor) {
 
     const auto PNEWMAINWORKSPACE = monitor->m_activeWorkspace;
     const auto PNEWWORKSPACE     = monitor->m_activeSpecialWorkspace ? monitor->m_activeSpecialWorkspace : PNEWMAINWORKSPACE;
-    const auto PNEWWINDOW        = PNEWWORKSPACE->getLastFocusedWindow();
+    auto       PNEWWINDOW        = PNEWWORKSPACE->getLastFocusedWindow();
+
+    if (!PNEWWINDOW)
+        PNEWWINDOW = PNEWWORKSPACE->getTopLeftWindow();
+
+    if (!PNEWWINDOW)
+        PNEWWINDOW = PNEWWORKSPACE->getFirstWindow();
 
     if (PNEWWINDOW) {
         updateRelativeCursorCoords();
@@ -932,10 +938,18 @@ ActionResult Actions::changeWorkspace(PHLWORKSPACE ws) {
 
     if (PMONITOR != PMONITORWORKSPACEOWNER) {
         Vector2D middle = PMONITORWORKSPACEOWNER->middle();
-        if (const auto PLAST = ws->getLastFocusedWindow(); PLAST) {
-            Desktop::focusState()->fullWindowFocus(PLAST, Desktop::FOCUS_REASON_KEYBIND);
+        auto     pWindow = ws->getLastFocusedWindow();
+
+        if (!pWindow)
+            pWindow = ws->getTopLeftWindow();
+
+        if (!pWindow)
+            pWindow = ws->getFirstWindow();
+
+        if (pWindow) {
+            Desktop::focusState()->fullWindowFocus(pWindow, Desktop::FOCUS_REASON_KEYBIND);
             if (*PWORKSPACECENTERON == 1)
-                middle = PLAST->middle();
+                middle = pWindow->middle();
         }
         g_pCompositor->warpCursorTo(middle);
     }
