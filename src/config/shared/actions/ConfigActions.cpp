@@ -29,6 +29,7 @@
 #include "../../../config/shared/monitor/MonitorRuleManager.hpp"
 #include "../../../protocols/IdleNotify.hpp"
 #include "../../../protocols/GlobalShortcuts.hpp"
+#include "../../../protocols/LayerShell.hpp"
 #include "../../../protocols/InputCapture.hpp"
 #include "../../../event/EventBus.hpp"
 #include "../../../helpers/MiscFunctions.hpp"
@@ -1081,9 +1082,10 @@ ActionResult Actions::changeWorkspace(PHLWORKSPACE ws) {
     if (WARP > 0) {
         auto PLAST     = ws->getLastFocusedWindow();
         auto HLSurface = Desktop::View::CWLSurface::fromResource(g_pSeatManager->m_state.pointerFocus.lock());
+        const auto LS = Desktop::View::CLayerSurface::fromView(HLSurface);
 
-        if (PLAST && (!HLSurface || HLSurface->view()->type() == Desktop::View::VIEW_TYPE_WINDOW))
-            PLAST->warpCursor(WARP == 2);
+        if (PLAST && (!LS || !LS->m_layerSurface ||
+          LS->m_layerSurface->m_current.layer != ZWLR_LAYER_SHELL_V1_LAYER_TOP))
     }
 
     return {};
@@ -1196,9 +1198,10 @@ ActionResult Actions::toggleSpecial(PHLWORKSPACE special) {
     if (*PWARPONTOGGLESPECIAL > 0) {
         auto PLAST     = focusedWorkspace->getLastFocusedWindow();
         auto HLSurface = Desktop::View::CWLSurface::fromResource(g_pSeatManager->m_state.pointerFocus.lock());
+        const auto LS = Desktop::View::CLayerSurface::fromView(HLSurface);
 
-        if (PLAST && (!HLSurface || HLSurface->view()->type() == Desktop::View::VIEW_TYPE_WINDOW))
-            PLAST->warpCursor(*PWARPONTOGGLESPECIAL == 2);
+        if (PLAST && (!LS || !LS->m_layerSurface ||
+          LS->m_layerSurface->m_current.layer != ZWLR_LAYER_SHELL_V1_LAYER_TOP))
     }
 
     return {};
