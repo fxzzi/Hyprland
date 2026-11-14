@@ -245,14 +245,29 @@ vec4
         pixColor = toNit(pixColor, srcTFRange);
     pixColor.a   = finalAlpha;
     pixColor.rgb *= pixColor.a;
+#if USE_MIRROR
+    vec4 mirrorColor = pixColor;
+#endif
 #if USE_TONEMAP
-    pixColor = tonemap(pixColor, dstxyz, maxLuminance, dstMaxLuminance, dstRefLuminance, tonemapMode);
+    // a negative mode means only the mirror needs tonemapping, see CHyprOpenGLImpl::renderToFBInternal
+    if (tonemapMode > 0)
+        pixColor = tonemap(pixColor, dstxyz, maxLuminance, dstMaxLuminance, dstRefLuminance, tonemapMode);
 #endif
 
 #if USE_MIRROR
-    // TODO HDR -> SDR tonemap
-    vec4 mirrorColor = fromLinearNit(pixColor, CM_TRANSFER_FUNCTION_SRGB,
-                                     srcTF == CM_TRANSFER_FUNCTION_GAMMA22 || srcTF == CM_TRANSFER_FUNCTION_SRGB ? srcTFRange : vec2(SDR_MIN_LUMINANCE, SDR_MAX_LUMINANCE));
+    if (srcTF == CM_TRANSFER_FUNCTION_GAMMA22 || srcTF == CM_TRANSFER_FUNCTION_SRGB)
+        mirrorColor = fromLinearNit(pixColor, CM_TRANSFER_FUNCTION_SRGB, srcTFRange);
+    else {
+#if USE_TONEMAP
+        // HDR -> SDR: content is already referred to the target's reference white (see getCMSettings),
+        // map that onto SDR white, then tonemap the remaining range into SDR
+        mirrorColor.rgb *= SDR_MAX_LUMINANCE / dstRefLuminance;
+        mirrorColor = tonemap(mirrorColor, dstxyz, maxLuminance * SDR_MAX_LUMINANCE / dstRefLuminance, SDR_MAX_LUMINANCE, SDR_MAX_LUMINANCE, abs(tonemapMode));
+#else
+        mirrorColor = pixColor;
+#endif
+        mirrorColor = fromLinearNit(mirrorColor, CM_TRANSFER_FUNCTION_SRGB, vec2(SDR_MIN_LUMINANCE, SDR_MAX_LUMINANCE));
+    }
 #endif
     pixColor = fromLinearNit(pixColor, dstTF, dstTFRange);
 #if USE_SDR_MOD
