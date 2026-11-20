@@ -113,16 +113,8 @@
     let
       inherit (nixpkgs) lib;
       eachSystem = lib.genAttrs (import systems);
-      pkgsFor = eachSystem (
-        system:
-        import nixpkgs {
-          localSystem = system;
-          overlays = with self.overlays; [
-            hyprland-packages
-            hyprland-extras
-          ];
-        }
-      );
+      mkPackages = import ./nix/mk-packages.nix { inherit lib self; };
+      pkgsFor = eachSystem (system: mkPackages nixpkgs.legacyPackages.${system});
       pkgsCrossFor = eachSystem (
         system: crossSystem:
         import nixpkgs {

@@ -6,8 +6,11 @@ inputs:
   ...
 }:
 let
-  inherit (pkgs.stdenv.hostPlatform) system;
   selflib = import ./lib.nix lib;
+  hyprlandPkgs = import ./mk-packages.nix {
+    inherit lib;
+    inherit (inputs) self;
+  } pkgs;
   cfg = config.programs.hyprland;
 in
 {
@@ -124,8 +127,8 @@ in
   config = lib.mkMerge [
     {
       programs.hyprland = {
-        package = lib.mkDefault inputs.self.packages.${system}.hyprland;
-        portalPackage = lib.mkDefault inputs.self.packages.${system}.xdg-desktop-portal-hyprland;
+        package = lib.mkDefault hyprlandPkgs.hyprland;
+        portalPackage = lib.mkDefault hyprlandPkgs.xdg-desktop-portal-hyprland;
       };
     }
     (lib.mkIf cfg.enable {

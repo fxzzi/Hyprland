@@ -5,9 +5,7 @@ self:
   ...
 }:
 let
-  inherit (pkgs.stdenv.hostPlatform) system;
-
-  package = self.packages.${system}.default;
+  package = (import ./mk-packages.nix { inherit lib self; } pkgs).hyprland;
 in
 {
   config = {
